@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var app = express();
 var http = require('http').Server(app);
 
 //Load twilio module
@@ -7,6 +8,27 @@ var twilio = require('twilio');
 var twilioSid = process.env.TWILIO_SID;
 var twilioAuth = process.env.TWILIO_AUTH;
 var client = new twilio.RestClient(twilioSid, twilioAuth);
+
+//Setting up the port to listen to
+app.set('port', (process.env.PORT || 5000));
+
+//Setting up the resource directory
+app.use(express.static(__dirname + '/public'));
+
+app.use( bodyParser.urlencoded({ extended: false }));
+app.use( bodyParser.json());
+
+app.use(busboy());
+
+//Setting up cookie use
+app.use(cookieParser());
+
+//Setting up session handling
+app.use(session({secret: 't4gd0m1n4t10n'}));
+
+// views is directory for all template files
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
 
 var mongoose = require('mongoose');
 var userSchema = new mongoose.Schema({
@@ -39,4 +61,8 @@ app.post('/api/v1/text', function(req, res) {
   var message = req.body.Body;
   console.log(req.body);
   res.send("Success");
+});
+
+http.listen(app.get('port'), function() {
+  console.log('Node app is running on port', app.get('port'));
 });
