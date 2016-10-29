@@ -18,14 +18,6 @@ app.use(express.static(__dirname + '/public'));
 app.use( bodyParser.urlencoded({ extended: false }));
 app.use( bodyParser.json());
 
-app.use(busboy());
-
-//Setting up cookie use
-app.use(cookieParser());
-
-//Setting up session handling
-app.use(session({secret: 't4gd0m1n4t10n'}));
-
 // views is directory for all template files
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
