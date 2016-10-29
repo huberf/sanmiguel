@@ -7,6 +7,7 @@ var http = require('http').Server(app);
 var twilio = require('twilio');
 var twilioSid = process.env.TWILIO_SID;
 var twilioAuth = process.env.TWILIO_AUTH;
+var masterNumber = process.env.MASTER_NUMBER;
 var client = new twilio.RestClient(twilioSid, twilioAuth);
 
 //Setting up the port to listen to
@@ -38,7 +39,7 @@ var db = mongoose.connect(`mongodb://${mongoUser}:${mongoPass}${mongoSlug}`);
 function sendMessage(recipient, message) {
   client.sms.messages.create({
     to: recipient,
-    from: '+19312288468',
+    from: masterNumber,
     body: message
   }, function(err, mess) {
     if(err) {
@@ -53,7 +54,17 @@ app.post('/api/v1/text', function(req, res) {
   console.log(req.body.Body);
   var message = req.body.Body;
   console.log(req.body);
-  sendMessage(req.body.From, `We received the message: ${req.body.Body}, from the number ${req.body.From}, which is located in ${req.body.FromCity}, ${req.body.FromState}. We hope you like your coffee!`);
+  User.find({phone: req.body.From}, (err, user) => {
+    if( user[0] ) {
+      user[0].messages.push([req.body.Body]);
+      user[0].save();
+      sendMessage(req.body.From, `You've message us ${user[0].messages.length} times.`);
+    } else {
+      var newUser = new User({phone: req.body.From, messages: [[req.body.Body]], userId: 'None', creationDate: 'None'});
+      newUser.save();
+    }
+    sendMessage(req.body.From, `We received the message: ${req.body.Body}, from the number ${req.body.From}, which is located in ${req.body.FromCity}, ${req.body.FromState}. We hope you like your coffee!`);
+  });
   res.send("Success");
 });
 
