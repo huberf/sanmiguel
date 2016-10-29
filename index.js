@@ -53,6 +53,7 @@ app.post('/api/v1/text', function(req, res) {
   console.log(req.body.Body);
   var message = req.body.Body;
   console.log(req.body);
+  sendMessage(req.body.From, `We received the message: ${req.body.Body}, from the number ${req.body.From}, which is located in ${req.body.FromCity}, ${req.body.FromState}. We hope you like your coffee!`);
   res.send("Success");
 });
 
