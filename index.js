@@ -50,6 +50,10 @@ function sendMessage(recipient, message) {
   });
 }
 
+app.get('/', function(req, res) {
+  res.send('API Status: Online and ready');
+});
+
 app.post('/api/v1/text', function(req, res) {
   console.log(req.body.Body);
   var message = req.body.Body;
