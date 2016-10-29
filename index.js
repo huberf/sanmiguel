@@ -58,7 +58,7 @@ app.post('/api/v1/text', function(req, res) {
     if( user[0] ) {
       user[0].messages.push([req.body.Body]);
       user[0].save();
-      sendMessage(req.body.From, `You've message us ${user[0].messages.length} times.`);
+      sendMessage(req.body.From, `You've messaged us ${user[0].messages.length} times.`);
     } else {
       var newUser = new User({phone: req.body.From, messages: [[req.body.Body]], userId: 'None', creationDate: 'None'});
       newUser.save();
