@@ -32,7 +32,8 @@ var userSchema = new mongoose.Schema({
 var User = mongoose.model('User', userSchema);
 var mongoUser = process.env.MONGO_USER;
 var mongoPass = process.env.MONGO_PASS;
-var db = mongoose.connect(`mongodb://${mongoUser}:${mongoPass}@ds041613.mongolab.com:41613/tag`);
+var mongoSlug = process.env.MONGO_SLUG;
+var db = mongoose.connect(`mongodb://${mongoUser}:${mongoPass}${mongoSlug}`);
 
 function sendMessage(recipient, message) {
   client.sms.messages.create({
