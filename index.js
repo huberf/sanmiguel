@@ -30,6 +30,13 @@ var userSchema = new mongoose.Schema({
   userId: String,
   creationDate: String
 });
+var sweepstakesSchema = new mongoose.Schema({
+  live: Boolean,
+  type: String,
+  startTime: Number,
+  endTime: Number,
+  whichOne: Number,
+});
 var User = mongoose.model('User', userSchema);
 var mongoUser = process.env.MONGO_USER;
 var mongoPass = process.env.MONGO_PASS;
@@ -50,6 +57,35 @@ function sendMessage(recipient, message) {
   });
 }
 
+function checkSweepstakes() {
+  Sweepstakes.find({}, (err, sweep) => {
+    for(var i = 0; i < sweep.length; i++) {
+      if(sweep[i].live == true) {
+        if(sweep[i].type == "InstantWin") {
+          var start = sweep[i].startTime;
+          var end = sweep[i].endTime;
+          var whichOne = sweep[i].whichOne;
+          var tally = 0;
+          User.find({}, (err, user) => {
+            user.forEach((data) => {
+              data.messages.forEach((message) => {
+                if( message[1] > start && message[1] < end) {
+                  tally++;
+                  if(tally == whichOne) {
+                    sweep[i].live = false;
+                    sweep[i].save();
+                    return true;
+                  }
+                }
+              });
+            });
+          });
+        }
+      }
+    }
+  });
+}
+
 app.get('/', function(req, res) {
   res.send('API Status: Online and ready');
 });
@@ -66,6 +102,9 @@ app.post('/api/v1/text', function(req, res) {
     } else {
       var newUser = new User({phone: req.body.From, messages: [[req.body.Body]], userId: 'None', creationDate: 'None'});
       newUser.save();
+    }
+    if( checkSweepstakes() ) {
+      sendMessage(req.body.From, "You are the lucky winner! Come and get your reward at the San Miguel's Coffee Shop.")
     }
     sendMessage(req.body.From, `We received the message: ${req.body.Body}, from the number ${req.body.From}, which is located in ${req.body.FromCity}, ${req.body.FromState}. We hope you like your coffee!`);
   });
