@@ -30,6 +30,7 @@ var userSchema = new mongoose.Schema({
   userId: String,
   creationDate: String
 });
+var User = mongoose.model('User', userSchema);
 var sweepstakesSchema = new mongoose.Schema({
   live: Boolean,
   type: String,
@@ -37,7 +38,7 @@ var sweepstakesSchema = new mongoose.Schema({
   endTime: Number,
   whichOne: Number,
 });
-var User = mongoose.model('User', userSchema);
+var Sweepstakes = mongoose.model('Sweepstakes', sweepstakesSchema);
 var mongoUser = process.env.MONGO_USER;
 var mongoPass = process.env.MONGO_PASS;
 var mongoSlug = process.env.MONGO_SLUG;
