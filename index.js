@@ -1,4 +1,5 @@
 var express = require('express');
+var uuid = require('uuid');
 var bodyParser = require('body-parser');
 var app = express();
 var http = require('http').Server(app);
@@ -28,10 +29,11 @@ var userSchema = new mongoose.Schema({
   phone: String,
   messages: Array,
   userId: String,
-  creationDate: String
+  creationDate: Number
 });
 var User = mongoose.model('User', userSchema);
 var sweepstakesSchema = new mongoose.Schema({
+  id: String,
   live: Boolean,
   type: String,
   startTime: Number,
@@ -60,29 +62,37 @@ function sendMessage(recipient, message) {
 
 function checkSweepstakes() {
   Sweepstakes.find({}, (err, sweep) => {
+    var today = new Date();
+    var time = today.getTime();
     for(var i = 0; i < sweep.length; i++) {
-      if(sweep[i].live == true) {
-        if(sweep[i].type == "InstantWin") {
-          var start = sweep[i].startTime;
-          var end = sweep[i].endTime;
-          var whichOne = sweep[i].whichOne;
-          var tally = 0;
-          User.find({}, (err, user) => {
-            user.forEach((data) => {
-              data.messages.forEach((message) => {
-                if( message[1] > start && message[1] < end) {
-                  tally++;
-                  if(tally == whichOne) {
-                    sweep[i].live = false;
-                    sweep[i].save();
-                    return true;
-                  }
-                }
-              });
+      if( time > sweep[i].startTime && time < sweep[i].endTime) {
+        if(sweep[i].live == true) {
+          if(sweep[i].type == "InstantWin") {
+            var start = sweep[i].startTime;
+            var end = sweep[i].endTime;
+            var whichOne = sweep[i].whichOne;
+            var tally = 0;
+            User.find({sweep[i].id: true}, (err, user) => {
+              if( user.length == whichOne ) {
+                sweep[i].live = false;
+                sweep[i].save();
+                return true;
+              }
             });
-          });
+          }
         }
       }
+    }
+  });
+}
+
+function registerSweepstakes(userId, sweepId) {
+  User.find({userId: userId}, function(err, user) {
+    if(user[0]) {
+      user[0][sweepId] = true;
+      user[0].save();
+    } else {
+      console.log("Couldn't find ID");
     }
   });
 }
@@ -101,7 +111,9 @@ app.post('/api/v1/text', function(req, res) {
       user[0].save();
       sendMessage(req.body.From, `You've messaged us ${user[0].messages.length} times.`);
     } else {
-      var newUser = new User({phone: req.body.From, messages: [[req.body.Body]], userId: 'None', creationDate: 'None'});
+      var today = new Date();
+      var time = today.getTime();
+      var newUser = new User({phone: req.body.From, messages: [[req.body.Body]], userId: uuid.v4(), creationDate: time});
       newUser.save();
     }
     if( checkSweepstakes() ) {
